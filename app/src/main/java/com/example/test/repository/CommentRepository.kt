@@ -34,7 +34,9 @@ class CommentRepositoryImpl : CommentRepository {
 
     private suspend fun save(comments: List<CommentDto>) {
         val commentsToSave = comments.map { comment -> comment.toEntity() }
-        commentDao.insertAll(commentsToSave)
+        for(comment in commentsToSave){
+            commentDao.insertAll(comment)
+        }
     }
 
     override suspend fun remove(comment: Comment) {

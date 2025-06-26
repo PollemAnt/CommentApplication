@@ -1,6 +1,5 @@
 package com.example.test.viewModel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.test.Comment
@@ -55,7 +54,6 @@ class CommentsViewModel(private val repository: CommentRepository) : ViewModel()
                 id++
                 val newComment =
                     Comment(id = id.toString(), message = commentMessage)
-                Log.v("QWE", "viewModel.addComment: $id $commentMessage")
                 repository.save(newComment)
             } catch (e: Exception) {
                 showError(e)
@@ -67,7 +65,6 @@ class CommentsViewModel(private val repository: CommentRepository) : ViewModel()
         viewModelScope.launchWithLoading {
             try {
                 val commentToRemove = state.value.comments.find { it.id == commentId } ?: return@launchWithLoading
-                Log.v("QWE", "viewModel.removeComment ID: $commentId" +"commecommentToRemove: "+ commentToRemove)
                 repository.remove(commentToRemove)
             } catch (e: Exception) {
                 showError(e)
@@ -83,7 +80,6 @@ class CommentsViewModel(private val repository: CommentRepository) : ViewModel()
 
     private suspend fun showError(exception: Exception) {
         state.value = state.value.copy(errorMessage = exception.toString())
-        Log.v("QWE", exception.toString())
         delay(1500)
         state.value = state.value.copy(errorMessage = null)
     }

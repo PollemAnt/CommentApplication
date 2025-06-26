@@ -55,7 +55,7 @@ class CommentsViewModelTest {
     }
 
     @Test
-    fun `added comment is saved in repository`() {
+    fun `added comment is saved in repository`() = runTest {
         val commentToAdd = "Added Comment"
 
         viewModel.addComment(commentToAdd)
@@ -69,30 +69,13 @@ class CommentsViewModelTest {
             id = "id",
             message = "Removed Comment"
         )
-        //viewModel.addComment(removedComment)
-        commentsState.value += commentToRemove
-
-        val idCommentToRemove = commentToRemove.id
-
-        viewModel.removeComment(idCommentToRemove)
-
-
-        val isRemoved: Boolean =
-            viewModel.state.value.comments.any { comment -> comment == commentToRemove }
-        assertTrue(commentToRemove !in viewModel.state.value.comments)
-        assertEquals(true, isRemoved)
-    }
-
-    @Test
-    fun `removed comment is removed from repository`() {
-        val commentToRemove = Comment(
-            id = "id",
-            message = "Removed Comment"
-        )
         commentsState.value += commentToRemove
         val idCommentToRemove = commentToRemove.id
+
         viewModel.removeComment(idCommentToRemove)
 
         coVerify(exactly = 1) { repository.remove(commentToRemove) }
+        assertTrue(commentToRemove !in viewModel.state.value.comments)
+        assertEquals(0, viewModel.state.value.comments.size)
     }
 }
