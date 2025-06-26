@@ -30,7 +30,7 @@ class CommentsViewModel(private val repository: CommentRepository) : ViewModel()
 
     var id = 0
     private val query = MutableStateFlow("")
-    private val state = MutableStateFlow(CommentsState())
+    val state = MutableStateFlow(CommentsState())
     val uiState = combine(
         state,
         query.debounce(300).onStart { emit("") })
