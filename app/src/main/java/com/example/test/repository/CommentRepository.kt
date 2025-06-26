@@ -1,19 +1,12 @@
 package com.example.test.repository
 
-import android.util.Log
 import com.example.test.Comment
 import com.example.test.repository.api.CommentDto
-import com.example.test.repository.api.CommentService
-import com.example.test.repository.api.RetrofitProvider
 import com.example.test.repository.datebase.CommentDao
 import com.example.test.repository.datebase.CommentEntity
 import com.example.test.repository.datebase.DatabaseProvider
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 
 
 interface CommentRepository {
@@ -22,13 +15,9 @@ interface CommentRepository {
     fun getComments(): Flow<List<Comment>>
 }
 
-class CommentRepositoryImpl : CommentRepository {
-
-    private val commentDao: CommentDao = DatabaseProvider.database.commentDao()
-    private val commentService: CommentService = RetrofitProvider.commentService
+class CommentRepositoryImpl(private val commentDao: CommentDao = DatabaseProvider.database.commentDao()) : CommentRepository {
 
     override suspend fun save(comment: Comment) {
-        Log.v("QWE","save: "+ comment.id+ "  " +comment.message)
         commentDao.insertAll(comment.toEntity())
     }
 
@@ -40,16 +29,11 @@ class CommentRepositoryImpl : CommentRepository {
     }
 
     override suspend fun remove(comment: Comment) {
-        Log.v("QWE","remove: "+ comment.id+ "  " +comment.message)
-        val commentToRemove = commentDao.findById(comment.id) ?: return
-        commentDao.delete(commentToRemove)
+        commentDao.delete(CommentEntity(comment.id, comment.message))
     }
 
     override fun getComments(): Flow<List<Comment>> {
-        return flow { emit(commentService.loadAll()) }
-            .catch { emit(emptyList()) }
-            .onEach { comments -> save(comments) }
-            .flatMapLatest { getCommentsFromDB() }
+        return getCommentsFromDB()
     }
 
     private fun getCommentsFromDB() = commentDao.getAll()

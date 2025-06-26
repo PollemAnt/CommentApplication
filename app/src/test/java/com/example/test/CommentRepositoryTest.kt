@@ -1,6 +1,6 @@
 package com.example.test
 
-import com.example.test.repository.CommentRepository
+import com.example.test.repository.CommentRepositoryImpl
 import com.example.test.repository.datebase.CommentDao
 import com.example.test.repository.datebase.CommentEntity
 import io.mockk.coVerify
@@ -12,13 +12,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 
 
 class CommentRepositoryTest {
 
-    private val repository = mockk<CommentRepository>()
+    private lateinit var repository: CommentRepositoryImpl
     private val commentDao = mockk<CommentDao>(relaxed = true)
+
+    @Before
+    fun setup() {
+        repository = CommentRepositoryImpl(commentDao)
+    }
+
 
     @Test
     fun `getComments returns comments from DAO`() = runTest {
@@ -28,6 +35,7 @@ class CommentRepositoryTest {
             CommentEntity("2", "DAO Comment 2")
         )
         val expectedComments = mockCommentEntities.map { Comment(it.id, it.message) }
+
         every { commentDao.getAll() } returns flowOf(mockCommentEntities)
 
         // When
@@ -65,12 +73,10 @@ class CommentRepositoryTest {
         // When
         repository.remove(commentToRemove)
 
+        val expectedEntity = CommentEntity(commentToRemove.id, commentToRemove.message)
+
         // Then
-        coVerify(exactly = 1) {
-            commentDao.delete(match {
-                it.id == commentToRemove.id && it.message == commentToRemove.message
-            })
-        }
+        coVerify(exactly = 1) { commentDao.delete(expectedEntity) }
         confirmVerified(commentDao)
     }
 }
