@@ -22,9 +22,6 @@ interface CommentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(vararg comments: CommentEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(comments: List<CommentEntity>)
-
     @Delete
     suspend fun delete(comment: CommentEntity)
 

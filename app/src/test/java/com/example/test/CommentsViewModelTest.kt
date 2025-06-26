@@ -40,11 +40,6 @@ class CommentsViewModelTest {
 
     @Test
     fun `screen should start without any comments`() = runTest {
-        // given
-
-        // when
-
-        // then
         assertEquals(emptyList<Comment>(), viewModel.state.value.comments)
     }
 

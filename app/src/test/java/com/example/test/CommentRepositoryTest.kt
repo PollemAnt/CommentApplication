@@ -1,61 +1,76 @@
 package com.example.test
 
 import com.example.test.repository.CommentRepository
+import com.example.test.repository.datebase.CommentDao
+import com.example.test.repository.datebase.CommentEntity
+import io.mockk.coVerify
+import io.mockk.confirmVerified
+import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.Flow
+import io.mockk.verify
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.jupiter.api.Assertions
+
 
 class CommentRepositoryTest {
 
     private val repository = mockk<CommentRepository>()
-
+    private val commentDao = mockk<CommentDao>(relaxed = true)
 
     @Test
-    fun `save should add comment to DB`() = runTest {
-        //given
-        val commentToAdd = Comment(id = "id", message = "Add this Comment")
+    fun `getComments returns comments from DAO`() = runTest {
+        // Given
+        val mockCommentEntities = listOf(
+            CommentEntity("1", "DAO Comment 1"),
+            CommentEntity("2", "DAO Comment 2")
+        )
+        val expectedComments = mockCommentEntities.map { Comment(it.id, it.message) }
+        every { commentDao.getAll() } returns flowOf(mockCommentEntities)
 
-        //when
+        // When
+        val comments = repository.getComments().first()
 
+        // Then
+        assertEquals(expectedComments, comments)
+        verify(exactly = 1) { commentDao.getAll() }
+        confirmVerified(commentDao)
+    }
 
-        //then
+    @Test
+    fun `saveComment calls DAO insertComment`() = runTest {
+        // Given
+        val commentToSave = Comment("3", "New comment to save")
+
+        // When
+        repository.save(commentToSave)
+
+        // Then
+          coVerify(exactly = 1) {
+              commentDao.insertAll(match {
+                 it.id == commentToSave.id && it.message == commentToSave.message
+             })
+          }
+        confirmVerified(commentDao)
     }
 
 
     @Test
-    fun `get comment test`() {
-        repository.getComments()
-        //given
+    fun `removeComment calls DAO deleteComment`() = runTest {
+        // Given
+        val commentToRemove = Comment("id_to_delete", "Comment to delete")
 
-        //when
+        // When
+        repository.remove(commentToRemove)
 
-        //then
-
-    }
-
-    @Test
-    fun `MOCCK addComment added comment`() = runTest {
-        //given
-        val comment = Comment(id = "id-com-test", message = "commentMessage")
-
-        //when
-        repository.save(comment)
-
-        //then
-        val list = getListFromFlow(repository.getComments())
-        Assertions.assertEquals(1, list.size)
-        Assertions.assertEquals("commentMessage", list[0].message)
-    }
-
-    private fun Comment.toModel() = Comment(id = id, message = message)
-
-    suspend fun getListFromFlow(flow: Flow<List<Comment>>): List<Comment> {
-        var result = emptyList<Comment>()
-        flow.collect { list ->
-            result = list
+        // Then
+        coVerify(exactly = 1) {
+            commentDao.delete(match {
+                it.id == commentToRemove.id && it.message == commentToRemove.message
+            })
         }
-        return result
+        confirmVerified(commentDao)
     }
 }
